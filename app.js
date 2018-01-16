@@ -1,18 +1,22 @@
+const socketio = require('socket.io');
 const express = require( 'express' );
 const nunjucks = require( 'nunjucks' );
 const app = express(); // creates an instance of an express application
 const routes = require('./routes');
-app.use('/', routes);
-app.use(express.static('public'));
+const bodyParser = require('body-parser');
 
-const locals = {
-  title: 'An Example',
-  people: [
-      { name: 'Gandalf'},
-      { name: 'Frodo' },
-      { name: 'Hermione'}
-  ]
-};
+var server = app.listen(3000,() => console.log('Server Is Listening'));
+var io = socketio.listen(server);
+
+app.use(bodyParser.urlencoded({ extended: false }))
+// parse application/json
+app.use(bodyParser.json())
+
+
+var router = routes(io);
+app.use( '/', router);
+
+app.use(express.static('public'));
 
 nunjucks.configure('views', {noCache: true});
 
@@ -28,7 +32,7 @@ app.use(function(req, res, next){
 
 app.get('/', (req, res) => (res.sendFile(__dirname + res.url)));
 
-app.listen(3000, () => console.log('server listening'));
+// app.listen(3000, () => console.log('server listening'));
 
 /*
 Request is essentially the browser sending a request to that specific URL,
